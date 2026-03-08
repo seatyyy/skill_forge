@@ -4,4 +4,9 @@ type: space
 runtime: fastapi
 app: server.app:app
 port: 8000
+hf_space:
+  sdk: docker
+  hardware: cpu-basic
+env_vars:
+  ENABLE_WEB_INTERFACE: "true"
 

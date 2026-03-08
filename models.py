@@ -19,9 +19,9 @@ class SkillForgeAction(Action):
     """Action for the Skill Forge environment"""
     action_type: Literal["create_skill", "use_skill", "raw_code"]
     content: str = Field(description="The content of the action. For create_skill, it is the template. For use_skill, it is the skill id. For raw_code, it is the code.")
-    skill_name: Optional[str] = None # only for create_skill
+    skill_name: str = "" # only for create_skill
     reasoning: str = ""
-    params: Optional[dict] = None
+    params: dict = Field(default_factory=dict, description="Template slot values for use_skill")
 
 
 class SkillForgeObservation(Observation):
@@ -30,10 +30,12 @@ class SkillForgeObservation(Observation):
     task_description: str
     snapshot_data: str  #df.head(5).to_string()
     skill_library: dict
-    context: str 
+    context: str
     result_correct: bool
     result_output: str
     expected_output: str
     step_count: int
     total_tokens: int
+    reward: Optional[float] = Field(default=None, description="Reward signal from the last action")
+    done: bool = Field(default=False, description="Whether the episode has terminated")
 
