@@ -16,66 +16,33 @@ from .models import SkillForgeAction, SkillForgeObservation
 
 
 class SkillForgeEnv(
-    EnvClient[SkillForgeAction, SkillForgeObservation]
+    EnvClient[SkillForgeAction, SkillForgeObservation, State]
 ):
     """
     Client for the Skill Forge Environment.
 
-    This client maintains a persistent WebSocket connection to the environment server,
-    enabling efficient multi-step interactions with lower latency.
-    Each client instance has its own dedicated environment session on the server.
+    Maintains a persistent WebSocket connection to the environment server.
+    Each client instance has its own dedicated environment session.
 
     Example:
-        >>> # Connect to a running server
         >>> with SkillForgeEnv(base_url="http://localhost:8000") as client:
         ...     result = client.reset()
-        ...     print(result.observation.echoed_message)
+        ...     print(result.observation.task_description)
         ...
-        ...     result = client.step(SkillForgeAction(message="Hello!"))
-        ...     print(result.observation.echoed_message)
-
-    Example with Docker:
-        >>> # Automatically start container and connect
-        >>> client = SkillForgeEnv.from_docker_image("skill_forge-env:latest")
-        >>> try:
-        ...     result = client.reset()
-        ...     result = client.step(SkillForgeAction(message="Test"))
-        ... finally:
-        ...     client.close()
+        ...     action = SkillForgeAction(
+        ...         action_type="raw_code",
+        ...         content="df.sort_values('revenue', ascending=False)['product'].tolist()",
+        ...     )
+        ...     result = client.step(action)
+        ...     print(result.observation.result_correct)
     """
 
     def _step_payload(self, action: SkillForgeAction) -> Dict:
-        """
-        Convert SkillForgeAction to JSON payload for step message.
-
-        Args:
-            action: SkillForgeAction instance
-
-        Returns:
-            Dictionary representation suitable for JSON encoding
-        """
-        return {
-            "message": action.message,
-        }
+        return action.model_dump()
 
     def _parse_result(self, payload: Dict) -> StepResult[SkillForgeObservation]:
-        """
-        Parse server response into StepResult[SkillForgeObservation].
-
-        Args:
-            payload: JSON response data from server
-
-        Returns:
-            StepResult with SkillForgeObservation
-        """
         obs_data = payload.get("observation", {})
-        observation = SkillForgeObservation(
-            echoed_message=obs_data.get("echoed_message", ""),
-            message_length=obs_data.get("message_length", 0),
-            done=payload.get("done", False),
-            reward=payload.get("reward"),
-            metadata=obs_data.get("metadata", {}),
-        )
+        observation = SkillForgeObservation(**obs_data)
 
         return StepResult(
             observation=observation,
@@ -84,15 +51,6 @@ class SkillForgeEnv(
         )
 
     def _parse_state(self, payload: Dict) -> State:
-        """
-        Parse server response into State object.
-
-        Args:
-            payload: JSON response from state request
-
-        Returns:
-            State object with episode_id and step_count
-        """
         return State(
             episode_id=payload.get("episode_id"),
             step_count=payload.get("step_count", 0),

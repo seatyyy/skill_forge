@@ -6,6 +6,9 @@
 
 """Skill Forge environment server components."""
 
-from .skill_forge_environment import SkillForgeEnvironment
+try:
+    from .environment import SkillForgeEnvironment
+except ImportError:
+    from environment import SkillForgeEnvironment
 
 __all__ = ["SkillForgeEnvironment"]

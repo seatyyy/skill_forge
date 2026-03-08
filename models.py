@@ -19,7 +19,7 @@ class SkillForgeAction(Action):
     """Action for the Skill Forge environment"""
     action_type: Literal["create_skill", "use_skill", "raw_code"]
     content: str = Field(description="The content of the action. For create_skill, it is the template. For use_skill, it is the skill id. For raw_code, it is the code.")
-    skill_name: Optional[str] # only for create_skill
+    skill_name: Optional[str] = None # only for create_skill
     reasoning: str = ""
     params: Optional[dict] = None
 

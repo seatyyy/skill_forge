@@ -35,9 +35,12 @@ except Exception as e:  # pragma: no cover
         "openenv is required for the web interface. Install dependencies with '\n    uv sync\n'"
     ) from e
 
-# Import from local models.py (PYTHONPATH includes /app/env in Docker)
-from models import SkillForgeAction, SkillForgeObservation
-from .skill_forge_environment import SkillForgeEnvironment
+try:
+    from ..models import SkillForgeAction, SkillForgeObservation
+    from .environment import SkillForgeEnvironment
+except ImportError:
+    from models import SkillForgeAction, SkillForgeObservation
+    from environment import SkillForgeEnvironment
 
 
 # Create the app with web interface and README integration
