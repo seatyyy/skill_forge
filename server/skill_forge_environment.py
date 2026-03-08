@@ -10,13 +10,16 @@ Skill Forge Environment Implementation.
 An RL training environment where LLM Agents evolve from "reinventing the wheel" to "building a skill library."
 """
 
+import traceback
 from uuid import uuid4
+
+import pandas as pd
 
 from openenv.core.env_server.interfaces import Environment
 from openenv.core.env_server.types import State
 
 from models import SkillForgeAction, SkillForgeObservation
-from data_generator import TASKS
+from .data_generator import TASKS
 
 class SkillForgeEnvironment(Environment):
     """
@@ -71,13 +74,13 @@ class SkillForgeEnvironment(Environment):
             task_id=task["id"],
             task_description=task["description"],
             snapshot_data=task["dataframe"].head(5).to_string(),
-            skill_library=self.current_state.skill_library,
+            skill_library=self.skill_library,
             context="",
             step_count=0,
             total_tokens=0,
             result_correct=False,
             result_output="",
-            expected_output=task["expected_output"],
+            expected_output=str(task["expected_output"]),
         )
 
     def step(self, action: SkillForgeAction) -> SkillForgeObservation:  
@@ -91,7 +94,7 @@ class SkillForgeEnvironment(Environment):
         reward = 0.0
         
         if action.action_type == "create_skill":
-            self.current_state.skill_library[action.skill_name] = {
+            self.skill_library[action.skill_name] = {
                 "template": action.content,
                 "description": action.reasoning,
                 "used_count": 0,
@@ -101,11 +104,11 @@ class SkillForgeEnvironment(Environment):
             result_output = f"Skill {action.skill_name} created"
         else:
             if action.action_type == "use_skill":
-                skill = self.current_state.skill_library.get(action.content)                
+                skill = self.skill_library.get(action.content)                
                 # TODO: if action_type is use_skill while we don't have the skill yet, read reasoning to understand why the skill should be used and create the skill accordingly
                 if skill: 
                     exec_code = skill["template"].format(**(action.params or {}))
-                    self.current_state.skill_library[action.content]["used_count"] += 1
+                    self.skill_library[action.content]["used_count"] += 1
                 else: # TODO: log this scenario
                     exec_code = None
             else:
@@ -135,7 +138,7 @@ class SkillForgeEnvironment(Environment):
             total_tokens=0, # TODO P0: update this with the total tokens used
             result_correct=result_correct,
             result_output=result_output,
-            expected_output=next_task["expected_output"],
+            expected_output=str(next_task["expected_output"]),
         )
     
     def _evaluate(self, exec_code, dataframe, expected_output):

@@ -29,7 +29,7 @@ class SkillForgeObservation(Observation):
     task_id: str
     task_description: str
     snapshot_data: str  #df.head(5).to_string()
-    skill_library: List[Dict]
+    skill_library: dict
     context: str 
     result_correct: bool
     result_output: str
