@@ -59,6 +59,7 @@ class SkillForgeEnvironment(Environment):
     def step(self, action: SkillForgeAction) -> SkillForgeObservation:
         self._state.step_count += 1
         task = TASKS[self.task_idx]
+        reward = 0.0
 
         # --- create_skill: store template, stay on current task ---
         if action.action_type == "create_skill":
@@ -102,9 +103,12 @@ class SkillForgeEnvironment(Environment):
 
         result_correct, result_output = self._evaluate(exec_code, task["dataframe"], task["expected_output"])
 
+        if action.action_type == "create_skill":
+            result_correct = True
+
         if result_correct:
-            reward = 2.0
-            reward -= 0.001 * token_cost
+            reward += 2.0
+            reward -= 0.001 * token_cost 
             if action.action_type == "use_skill":
                 reward += 0.5
             self.tasks_solved += 1

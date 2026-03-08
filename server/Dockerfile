@@ -58,6 +58,11 @@ FROM ghcr.io/meta-pytorch/openenv-base:latest
 
 WORKDIR /app
 
+# Install git (required by HF Spaces runtime)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy the virtual environment from builder
 COPY --from=builder /app/env/.venv /app/.venv
 
